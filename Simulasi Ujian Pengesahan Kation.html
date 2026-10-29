@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ms"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulasi Ujian Pengesahan Kation</title>
+<style>
+:root{--bg:#fff8e7;--card:#ffffff;--tx:#23304a;--mu:#5b6b86;--ac:#ff7a59;--bd:#ffd9c7;--ok:#16a34a;--no:#dc2626;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{background:linear-gradient(150deg,#fff3c4 0%,#ffe0ec 35%,#d9f3ff 70%,#e6ffe9 100%) fixed;min-height:100%}
+*{box-sizing:inherit}html,body{margin:0}
+body{background:transparent;color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px;max-width:880px;margin:auto}
+h1{font-size:1.4rem;margin:0 0 4px;color:#e8590c}h2{color:#0e7490}h2{font-size:1.05rem;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-top:5px solid #ffb703;border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 6px 18px rgba(255,122,89,.15)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px 12px}
+button{cursor:pointer}button:hover{border-color:var(--ac)}
+button.on{background:linear-gradient(135deg,#ff7a59,#ffb703);color:#fff;border-color:transparent;font-weight:600}button{border-radius:20px}
+.mu{color:var(--mu);font-size:.9rem}
+.tubes{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.tw{text-align:center;cursor:pointer;padding:6px;border-radius:10px;border:2px solid transparent;flex:1;min-width:70px}
+.tw.sel{border-color:var(--ac);background:#fff1e8}
+.tube{width:34px;height:110px;margin:0 auto 4px;border:3px solid var(--mu);border-top:none;border-radius:0 0 18px 18px;position:relative;overflow:hidden;background:transparent}
+.liq{position:absolute;bottom:0;left:0;right:0;height:62%;background:rgba(160,200,230,.25);transition:.4s}
+.ppt{position:absolute;bottom:0;left:0;right:0;height:0;transition:.5s;opacity:.95}
+.ppt.white{height:38%;background:#f3f3f3}.ppt.yellow{height:38%;background:#f2d31b}
+.liq.cloud{background:rgba(245,245,245,.9)}.liq.yel{background:rgba(242,211,27,.75)}
+#log{font-size:.92rem;padding-left:18px;margin:6px 0}
+.res{min-height:2.6em;font-weight:600}
+.ans{display:flex;flex-wrap:wrap;gap:8px}.ans label{font-size:.9rem}
+.ok{color:var(--ok)}.no{color:var(--no)}
+ol{padding-left:20px;margin:6px 0}
+table{border-collapse:collapse;width:100%;font-size:.92rem}td,th{border:1px solid var(--bd);padding:6px;text-align:left}
+.sc{overflow-x:auto}
+input[type=text]{width:100%;max-width:420px}
+</style></head><body>
+<div class="row" style="justify-content:space-between"><h1 id="ttl"></h1><div class="row"><button id="lm" class="on">BM</button><button id="le">EN</button></div></div>
+<div class="row"><button id="p1" class="on"></button><button id="p2"></button></div>
+
+<section id="s1">
+<div class="card"><h2 id="h_flow"></h2><ol id="flow"></ol></div>
+<div class="card"><h2 id="h_tubes"></h2><div class="tubes" id="tubes"></div>
+<p class="mu" id="selinfo"></p>
+<div class="row" id="btns"></div>
+<p class="res" id="res"></p>
+<ul id="log"></ul></div>
+<div class="card"><h2 id="h_id"></h2><div class="ans" id="ans"></div>
+<div class="row" style="margin-top:10px"><button id="chk"></button><button id="nw"></button></div><p id="score" class="res"></p></div>
+</section>
+
+<section id="s2" hidden>
+<div class="card"><h2 id="h_in"></h2><div class="row"><input type="text" id="salt"><button id="go"></button></div><p class="mu" id="ex"></p></div>
+<div id="out"></div>
+</section>
+
+<script>
+const C=['Zn','Al','Pb','Mg','Ca'];
+const NAME={ms:{Zn:'zink',Al:'aluminium',Pb:'plumbum(II)',Mg:'magnesium',Ca:'kalsium'},en:{Zn:'zinc',Al:'aluminium',Pb:'lead(II)',Mg:'magnesium',Ca:'calcium'}};
+const ION={Zn:'Zn²⁺',Al:'Al³⁺',Pb:'Pb²⁺',Mg:'Mg²⁺',Ca:'Ca²⁺'};
+const L={
+ms:{ttl:'Simulasi Ujian Pengesahan Kation',p1:'Bahagian 1: Garam tidak diketahui',p2:'Bahagian 2: Garam diketahui',
+h_flow:'Langkah ujian',
+flow:['<b>Ujian 1 (NaOH):</b> Masukkan larutan garam ke dalam tabung uji. Tambah sedikit larutan NaOH, kemudian berlebihan. Mendakan putih larut dalam NaOH berlebihan: Zn²⁺, Al³⁺, Pb²⁺. Mendakan putih tidak larut: Mg²⁺, Ca²⁺.',
+'<b>Ujian 2 (NH₃):</b> Guna larutan garam yang sama dalam tabung uji baharu. Tambah sedikit larutan NH₃, kemudian berlebihan. Tiada mendakan: Ca²⁺. Mendakan putih larut dalam NH₃ berlebihan: Zn²⁺. Mendakan putih tidak larut: Mg²⁺, Al³⁺, Pb²⁺.',
+'<b>Ujian 3 (KI):</b> Jika ujian 1 dan 2 masih tidak dapat menentukan kation (Al³⁺ atau Pb²⁺), tambah larutan KI. Mendakan kuning: Pb²⁺. Tiada mendakan: bukan Pb²⁺ (Al³⁺).'],
+h_tubes:'Lima tabung uji berisi larutan garam tidak diketahui',tube:'Tabung',
+sel:'Tabung dipilih: ',none:'Pilih satu tabung uji.',
+b:{n1:'NaOH sedikit',n2:'NaOH berlebihan',a1:'NH₃ sedikit',a2:'NH₃ berlebihan',k:'Larutan KI',r:'Set semula tabung'},
+r:{clear:'Larutan tanpa warna, tiada mendakan.',w:'Mendakan putih terbentuk.',wd:'Mendakan putih larut dalam reagen berlebihan, larutan tanpa warna.',wi:'Mendakan putih tidak larut dalam reagen berlebihan.',np:'Tiada mendakan terbentuk.',y:'Mendakan kuning terbentuk.',need:'Tambah reagen sedikit dahulu pada tabung ini sebelum menambah berlebihan.'},
+h_id:'Kenal pasti kation dalam setiap tabung',chk:'Semak jawapan',nw:'Pusingan baharu',pick:'-- pilih --',
+sc:(n)=>`Skor: ${n}/5`,
+h_in:'Tulis nama garam atau formula kimia garam',ph:'Contoh: zink nitrat atau Zn(NO3)2',go:'Papar langkah ujian',ex:'Garam yang disokong: kation Zn, Al, Pb, Mg, Ca dengan anion nitrat, klorida, sulfat, karbonat.',
+bad:'Garam tidak dikenali. Cuba tulis nama (contoh: magnesium sulfat) atau formula (contoh: MgSO4).',
+cat:'Kation',an:'Anion',h_cat:'Ujian pengesahan kation',h_an:'Ujian pengesahan anion',
+th:['Langkah','Reagen','Pemerhatian','Inferens'],
+reag:{n1:'NaOH sedikit',n2:'NaOH berlebihan',a1:'NH₃ sedikit',a2:'NH₃ berlebihan',k:'KI'},
+obs:{w:'Mendakan putih',wd:'Mendakan putih larut, larutan tanpa warna',wi:'Mendakan putih tidak larut',np:'Tiada mendakan',y:'Mendakan kuning'},
+inf:'Ion hadir: ',cinf:(i)=>`${i} disahkan`,
+note:'Nota: Pb²⁺ dan Al³⁺ tidak dapat dibezakan oleh NaOH dan NH₃ sahaja; gunakan KI.',
+anions:{Cl:['Klorida (Cl⁻)',['Masukkan 2 cm³ larutan garam ke dalam tabung uji.','Tambah asid nitrik cair, kemudian larutan argentum nitrat.','Mendakan putih terbentuk: Cl⁻ hadir.']],
+SO4:['Sulfat (SO₄²⁻)',['Masukkan 2 cm³ larutan garam ke dalam tabung uji.','Tambah asid nitrik cair, kemudian larutan barium nitrat.','Mendakan putih terbentuk: SO₄²⁻ hadir.']],
+NO3:['Nitrat (NO₃⁻)',['Masukkan 2 cm³ larutan garam ke dalam tabung uji.','Tambah larutan ferum(II) sulfat, goncang.','Condongkan tabung, titiskan asid sulfurik pekat perlahan-lahan melalui dinding tabung.','Cincin perang terbentuk di antara dua lapisan: NO₃⁻ hadir.']],
+CO3:['Karbonat (CO₃²⁻)',['Masukkan sedikit pepejal garam ke dalam tabung uji.','Tambah asid hidroklorik cair.','Alirkan gas yang terbebas ke dalam air kapur.','Air kapur menjadi keruh: CO₃²⁻ hadir.']]}},
+en:{ttl:'Cation Confirmatory Test Simulation',p1:'Part 1: Unknown salts',p2:'Part 2: Known salts',
+h_flow:'Test procedure',
+flow:['<b>Test 1 (NaOH):</b> Place the salt solution in a test tube. Add a little NaOH solution, then in excess. White precipitate soluble in excess NaOH: Zn²⁺, Al³⁺, Pb²⁺. White precipitate insoluble: Mg²⁺, Ca²⁺.',
+'<b>Test 2 (NH₃):</b> Use the same salt solution in a new test tube. Add a little NH₃ solution, then in excess. No precipitate: Ca²⁺. White precipitate soluble in excess NH₃: Zn²⁺. White precipitate insoluble: Mg²⁺, Al³⁺, Pb²⁺.',
+'<b>Test 3 (KI):</b> If tests 1 and 2 still cannot decide the cation (Al³⁺ or Pb²⁺), add KI solution. Yellow precipitate: Pb²⁺. No precipitate: not Pb²⁺ (Al³⁺).'],
+h_tubes:'Five test tubes containing unknown salt solutions',tube:'Tube',
+sel:'Selected tube: ',none:'Select a test tube.',
+b:{n1:'NaOH (a little)',n2:'NaOH (excess)',a1:'NH₃ (a little)',a2:'NH₃ (excess)',k:'KI solution',r:'Reset tube'},
+r:{clear:'Colourless solution, no precipitate.',w:'A white precipitate forms.',wd:'White precipitate dissolves in excess reagent, colourless solution.',wi:'White precipitate does not dissolve in excess reagent.',np:'No precipitate forms.',y:'A yellow precipitate forms.',need:'Add a little of the reagent first before adding excess.'},
+h_id:'Identify the cation in each tube',chk:'Check answers',nw:'New round',pick:'-- choose --',
+sc:(n)=>`Score: ${n}/5`,
+h_in:'Write the name or chemical formula of the salt',ph:'Example: zinc nitrate or Zn(NO3)2',go:'Show test procedure',ex:'Supported salts: cations Zn, Al, Pb, Mg, Ca with nitrate, chloride, sulphate, carbonate.',
+bad:'Salt not recognised. Try the name (e.g. magnesium sulphate) or formula (e.g. MgSO4).',
+cat:'Cation',an:'Anion',h_cat:'Cation confirmatory tests',h_an:'Anion confirmatory test',
+th:['Step','Reagent','Observation','Inference'],
+reag:{n1:'NaOH (a little)',n2:'NaOH (excess)',a1:'NH₃ (a little)',a2:'NH₃ (excess)',k:'KI'},
+obs:{w:'White precipitate',wd:'White precipitate dissolves, colourless solution',wi:'White precipitate insoluble',np:'No precipitate',y:'Yellow precipitate'},
+inf:'Ion present: ',cinf:(i)=>`${i} confirmed`,
+note:'Note: NaOH and NH₃ alone cannot separate Pb²⁺ from Al³⁺; use KI.',
+anions:{Cl:['Chloride (Cl⁻)',['Place 2 cm³ of the salt solution in a test tube.','Add dilute nitric acid, then silver nitrate solution.','A white precipitate forms: Cl⁻ is present.']],
+SO4:['Sulphate (SO₄²⁻)',['Place 2 cm³ of the salt solution in a test tube.','Add dilute nitric acid, then barium nitrate solution.','A white precipitate forms: SO₄²⁻ is present.']],
+NO3:['Nitrate (NO₃⁻)',['Place 2 cm³ of the salt solution in a test tube.','Add iron(II) sulphate solution and shake.','Tilt the tube and slowly add concentrated sulphuric acid down the side.','A brown ring forms between the two layers: NO₃⁻ is present.']],
+CO3:['Carbonate (CO₃²⁻)',['Place a little solid salt in a test tube.','Add dilute hydrochloric acid.','Pass the gas released into limewater.','Limewater turns cloudy: CO₃²⁻ is present.']]}}
+};
+// reaction data: [obs few, obs excess] per reagent
+const RX={Zn:{n:['w','wd'],a:['w','wd'],k:'np'},Al:{n:['w','wd'],a:['w','wi'],k:'np'},Pb:{n:['w','wd'],a:['w','wi'],k:'y'},Mg:{n:['w','wi'],a:['w','wi'],k:'np'},Ca:{n:['w','wi'],a:['np','np'],k:'np'}};
+let lang='ms',sel=-1,order=[],st=[],logs=[];
+const $=id=>document.getElementById(id);
+const T=()=>L[lang];
+function shuffle(){order=[...C].sort(()=>Math.random()-.5);st=order.map(()=>({last:null,v:'clear'}));logs=order.map(()=>[]);sel=-1}
+function show(i,k){const t=$('tubes').children[i];t.querySelector('.liq').className='liq'+(k==='clear'||k==='wd'||k==='np'?'':k==='y'?' yel':' cloud');
+ t.querySelector('.ppt').className='ppt'+(k==='w'||k==='wi'?' white':k==='y'?' yellow':'')}
+function drawTubes(){const T_=T();$('tubes').innerHTML=order.map((_,i)=>`<div class="tw${i===sel?' sel':''}" data-i="${i}"><div class="tube"><div class="liq"></div><div class="ppt"></div></div><b>${T_.tube} ${i+1}</b></div>`).join('');
+ [...$('tubes').children].forEach((el,i)=>{el.onclick=()=>{sel=i;drawTubes();renderLog();$('res').textContent=''};show(i,st[i].v)})}
+function renderLog(){const T_=T();$('selinfo').textContent=sel<0?T_.none:T_.sel+T_.tube+' '+(sel+1);
+ $('log').innerHTML=sel<0?'':logs[sel].map(x=>`<li>${T_.b[x[0]]}: ${T_.r[x[1]]}</li>`).join('')}
+function act(a){const T_=T();if(sel<0){$('res').textContent=T_.none;return}
+ const c=order[sel],s=st[sel];let k;
+ if(a==='n1'||a==='a1'){k=RX[c][a[0]][0];s.last=a;}
+ else if(a==='n2'||a==='a2'){const f=a[0]+'1';if(s.last!==f){$('res').textContent=T_.r.need;return}k=RX[c][a[0]][1];s.last=a}
+ else if(a==='k'){k=RX[c].k;s.last='k'}
+ else{s.last=null;s.v='clear';logs[sel]=[];show(sel,'clear');renderLog();$('res').textContent='';return}
+ s.v=k;logs[sel].push([a,k]);show(sel,k);renderLog();$('res').textContent=T_.r[k]}
+function btns(){const T_=T();$('btns').innerHTML=['n1','n2','a1','a2','k','r'].map(a=>`<button data-a="${a}">${T_.b[a]}</button>`).join('');
+ [...$('btns').children].forEach(b=>b.onclick=()=>act(b.dataset.a))}
+function answers(){const T_=T();$('ans').innerHTML=order.map((_,i)=>`<label>${T_.tube} ${i+1}<br><select data-i="${i}"><option value="">${T_.pick}</option>${C.map(c=>`<option value="${c}">${ION[c]} (${NAME[lang][c]})</option>`).join('')}</select></label>`).join('')}
+function check(){const T_=T();let n=0;[...$('ans').querySelectorAll('select')].forEach((s,i)=>{const ok=s.value===order[i];if(ok)n++;s.className=ok?'ok':'no'});$('score').textContent=T_.sc(n)}
+function newRound(){shuffle();drawTubes();renderLog();answers();$('res').textContent='';$('score').textContent=''}
+function parse(raw){const r=raw.trim(),l=r.toLowerCase();if(!r)return null;let c=null,a=null;
+ if(/zink|zinc/.test(l))c='Zn';else if(/alumin/.test(l))c='Al';else if(/plumbum|lead/.test(l))c='Pb';else if(/magnes/.test(l))c='Mg';else if(/kalsium|calcium/.test(l))c='Ca';
+ if(/nitrat/.test(l))a='NO3';else if(/klorida|chloride/.test(l))a='Cl';else if(/sulfat|sulphate|sulfate/.test(l))a='SO4';else if(/karbonat|carbonate/.test(l))a='CO3';
+ if(!/[a-z]{4,}/.test(r)){if(!c){c=/Zn/.test(r)?'Zn':/Al/.test(r)?'Al':/Pb/.test(r)?'Pb':/Mg/.test(r)?'Mg':/Ca/.test(r)?'Ca':null}
+  if(!a){a=/NO3/i.test(r)?'NO3':/CO3/i.test(r)?'CO3':/SO4/i.test(r)?'SO4':/Cl/.test(r)?'Cl':null}}
+ return c&&a?{c,a}:(c||a)?{c,a}:null}
+function steps(c){const T_=T();const R=RX[c];const row=(s,r,o,i)=>`<tr><td>${s}</td><td>${T_.reag[r]}</td><td>${T_.obs[o]}</td><td>${i}</td></tr>`;
+ let rows=row(1,'n1',R.n[0],'')+row(2,'n2',R.n[1],'')+row(3,'a1',R.a[0],'')+row(4,'a2',R.a[1],'');
+ if(c==='Pb'||c==='Al')rows+=row(5,'k',R.k,'');
+ const i=T_.cinf(ION[c]);return `<div class="sc"><table><tr>${T_.th.map(x=>`<th>${x}</th>`).join('')}</tr>${rows}</table></div><p><b>${T_.inf}</b>${i}</p>${(c==='Pb'||c==='Al')?`<p class="mu">${T_.note}</p>`:''}`}
+function go(){const T_=T();const p=parse($('salt').value);if(!p||!p.c||!p.a){$('out').innerHTML=`<div class="card no">${T_.bad}</div>`;return}
+ const an=T_.anions[p.a];$('out').innerHTML=`<div class="card"><h2>${T_.cat}: ${ION[p.c]} (${NAME[lang][p.c]})</h2>${steps(p.c)}</div><div class="card"><h2>${T_.h_an}: ${an[0]}</h2><ol>${an[1].map(x=>`<li>${x}</li>`).join('')}</ol></div>`}
+function tab(n){$('s1').hidden=n!==1;$('s2').hidden=n!==2;$('p1').className=n===1?'on':'';$('p2').className=n===2?'on':''}
+function setLang(l){lang=l;const T_=T();document.documentElement.lang=l;$('lm').className=l==='ms'?'on':'';$('le').className=l==='en'?'on':'';
+ $('ttl').textContent=T_.ttl;$('p1').textContent=T_.p1;$('p2').textContent=T_.p2;$('h_flow').textContent=T_.h_flow;
+ $('flow').innerHTML=T_.flow.map(x=>`<li>${x}</li>`).join('');$('h_tubes').textContent=T_.h_tubes;$('h_id').textContent=T_.h_id;
+ $('chk').textContent=T_.chk;$('nw').textContent=T_.nw;$('h_in').textContent=T_.h_in;$('salt').placeholder=T_.ph;$('go').textContent=T_.go;$('ex').textContent=T_.ex;
+ btns();drawTubes();renderLog();answers();$('score').textContent='';$('res').textContent='';if($('out').innerHTML)go()}
+$('lm').onclick=()=>setLang('ms');$('le').onclick=()=>setLang('en');$('p1').onclick=()=>tab(1);$('p2').onclick=()=>tab(2);
+$('chk').onclick=check;$('nw').onclick=newRound;$('go').onclick=go;$('salt').onkeydown=e=>{if(e.key==='Enter')go()};
+shuffle();setLang('ms');
+</script></body></html>
